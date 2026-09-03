@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { parseItinerary } from '../src/utils/itineraryParser.js';
 
 /**
  * Serverless Function: /api/chat
@@ -133,7 +134,7 @@ User request: ${userPromptText}`;
       contents,
       generationConfig: {
         temperature: mode === 'itinerary' ? 0.2 : 0.7,
-        maxOutputTokens: 2048
+        maxOutputTokens: 4096
       }
     };
 
@@ -191,34 +192,10 @@ User request: ${userPromptText}`;
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    if (mode === 'itinerary') {
-      const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      try {
-        const parsed = JSON.parse(cleanJson);
-
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.days) && parsed.days.length > 0) {
-          const normalizedItinerary = {
-            destination: parsed.destination || destinationContext?.city || 'Selected Destination',
-            duration: Number(parsed.duration) || parsed.days.length || 5,
-            tripTitle: parsed.tripTitle || `${parsed.destination || 'Bespoke'} Discovery`,
-            days: parsed.days.map((d, index) => ({
-              day: Number(d.day) || index + 1,
-              title: d.title || `Day ${index + 1} Exploration`,
-              activities: Array.isArray(d.activities)
-                ? d.activities.map((act) => ({
-                    time: act.time || 'Flexible',
-                    title: act.title || 'Curated Place',
-                    description: act.description || 'Discover local culture and atmosphere.',
-                    location: act.location || 'Local Sanctum'
-                  }))
-                : []
-            }))
-          };
-          return res.status(200).json({ mode: 'itinerary', data: normalizedItinerary });
-        }
-      } catch (parseErr) {
-        console.warn('[AURA Serverless API] JSON Parse failed for itinerary, returning text:', parseErr.message);
-      }
+    // Always attempt itinerary extraction if mode === 'itinerary' OR if rawText contains JSON
+    const parsedItinerary = parseItinerary(rawText);
+    if (parsedItinerary) {
+      return res.status(200).json({ mode: 'itinerary', data: parsedItinerary });
     }
 
     return res.status(200).json({

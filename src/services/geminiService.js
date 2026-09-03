@@ -4,6 +4,7 @@
  */
 
 import { DESTINATIONS } from '../data/destinationsData';
+import { parseItinerary } from '../utils/itineraryParser';
 
 export async function askAuraAssistant({ prompt, history = [], destinationContext, mode = 'chat' }) {
   try {
@@ -22,10 +23,16 @@ export async function askAuraAssistant({ prompt, history = [], destinationContex
 
     const data = await response.json().catch(() => ({}));
 
-    if (response.ok) {
-      if (data && (data.reply || data.data)) {
-        return data;
+    if (response.ok && data) {
+      // Check if data is already structured itinerary or if reply string contains itinerary JSON
+      const parsedItinerary = parseItinerary(data.data) || parseItinerary(data.reply);
+      if (parsedItinerary) {
+        return {
+          mode: 'itinerary',
+          data: parsedItinerary
+        };
       }
+      return data;
     }
 
     // If server returned a specific error message (such as missing or invalid API key), display it!
