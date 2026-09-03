@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #0D0D0E;
+    color: #FAF8F5;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Strict horizontal bounds to prevent 320px horizontal overflow */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  section {
+    scroll-margin-top: 5rem;
+  }
+
+  h1, h2, h3, .font-editorial {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid #C87A57;
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+}
+
+/* Custom Editorial Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D0D0E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A32;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C87A57;
+}
+
+/* Scrollbar Hide Utility for horizontal mobile pill tracks */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =============================================
+   Glassmorphism & Editorial Overlays
+   ============================================= */
+.editorial-glass {
+  background: rgba(20, 20, 22, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-overlay-gradient {
+  background: linear-gradient(
+    180deg,
+    rgba(13, 13, 14, 0.55) 0%,
+    rgba(13, 13, 14, 0.35) 40%,
+    rgba(13, 13, 14, 0.8) 85%,
+    rgba(13, 13, 14, 1) 100%
+  );
+}
+
+.card-image-gradient {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(13, 13, 14, 0.95) 100%
+  );
+}
+
+/* =============================================
+   Hero Entrance Animation Keyframes & Classes
+   ============================================= */
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-enter-badge {
+  opacity: 0;
+  animation: heroFadeUp 600ms cubic-bezier(0.22, 1, 0.36, 1) 0ms forwards;
+  will-change: opacity, transform;
+}
+
+.hero-enter-title-1 {
+  opacity: 0;
+  animation: heroFadeUp 700ms cubic-bezier(0.22, 1, 0.36, 1) 150ms forwards;
+  will-change: opacity, transform;
+}
+
+.hero-enter-title-2 {
+  opacity: 0;
+  animation: heroFadeUp 700ms cubic-bezier(0.22, 1, 0.36, 1) 300ms forwards;
+  will-change: opacity, transform;
+}
+
+.hero-enter-desc {
+  opacity: 0;
+  animation: heroFadeUp 650ms cubic-bezier(0.22, 1, 0.36, 1) 450ms forwards;
+  will-change: opacity, transform;
+}
+
+.hero-enter-search {
+  opacity: 0;
+  animation: heroFadeUp 650ms cubic-bezier(0.22, 1, 0.36, 1) 600ms forwards;
+  will-change: opacity, transform;
+}
+
+.hero-enter-scroll {
+  opacity: 0;
+  animation: heroFadeUp 600ms cubic-bezier(0.22, 1, 0.36, 1) 800ms forwards;
+  will-change: opacity, transform;
+}
+
+/* =============================================
+   Continuous Scroll-Linked Reveal Classes
+   Bi-directional progress interpolation on scroll
+   ============================================= */
+.scroll-linked,
+.scroll-linked-stagger {
+  will-change: transform, opacity;
+}
+
+/* =============================================
+   Smooth Scroll Reveal System (Fallback)
+   ============================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-stagger {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-stagger.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-image {
+  opacity: 0;
+  transform: translateY(24px) scale(0.99);
+  transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-image.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* =============================================
+   Reduced Motion — respects OS settings
+   ============================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .reveal-stagger,
+  .reveal-image,
+  .scroll-linked,
+  .scroll-linked-stagger,
+  .hero-enter-badge,
+  .hero-enter-title-1,
+  .hero-enter-title-2,
+  .hero-enter-desc,
+  .hero-enter-search,
+  .hero-enter-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
