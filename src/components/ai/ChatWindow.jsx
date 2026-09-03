@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, RefreshCw, Bot, User } from 'lucide-react';
 import { askAuraAssistant } from '../../services/geminiService';
 import ItineraryView from './ItineraryView';
+import { parseItinerary } from '../../utils/itineraryParser';
 
 export default function ChatWindow({ destinationContext, initialPrompt = '' }) {
   const [messages, setMessages] = useState([]);
@@ -10,8 +11,8 @@ export default function ChatWindow({ destinationContext, initialPrompt = '' }) {
   const chatEndRef = useRef(null);
 
   const suggestedPrompts = [
+    "Plan a 5-day trip to Bangkok",
     "Plan a 5-day trip itinerary",
-    "How many days should I spend here?",
     "What are the top culinary experiences?",
     "When is the best time of year to visit?",
     "How do I make the journey more relaxed?"
@@ -58,13 +59,15 @@ export default function ChatWindow({ destinationContext, initialPrompt = '' }) {
 
       setLoading(false);
 
-      if (res.mode === 'itinerary' && res.data) {
+      const parsedItinerary = res.data || parseItinerary(res.reply);
+
+      if (parsedItinerary) {
         setMessages((prev) => [
           ...prev,
           {
             sender: 'aura',
-            text: `Here is your bespoke ${res.data.duration || 5}-day journey for ${res.data.destination || 'your trip'}:`,
-            itineraryData: res.data,
+            text: `Here is your bespoke ${parsedItinerary.duration}-day journey for ${parsedItinerary.destination}:`,
+            itineraryData: parsedItinerary,
             timestamp: new Date()
           }
         ]);
@@ -157,41 +160,47 @@ export default function ChatWindow({ destinationContext, initialPrompt = '' }) {
           </div>
         )}
 
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex gap-2.5 sm:gap-3 max-w-3xl ${
-              msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''
-            }`}
-          >
+        {messages.map((msg, idx) => {
+          const activeItinerary = msg.itineraryData || parseItinerary(msg.text);
+
+          return (
             <div
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
-                msg.sender === 'user'
-                  ? 'bg-aura-terracotta text-white'
-                  : 'bg-white/10 text-aura-sand border border-white/10'
+              key={idx}
+              className={`flex gap-2.5 sm:gap-3 max-w-3xl ${
+                msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''
               }`}
             >
-              {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
-            </div>
+              <div
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs mt-0.5 ${
+                  msg.sender === 'user'
+                    ? 'bg-aura-terracotta text-white'
+                    : 'bg-white/10 text-aura-sand border border-white/10'
+                }`}
+              >
+                {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+              </div>
 
-            <div
-              className={`rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed space-y-3 break-words overflow-hidden max-w-[85%] sm:max-w-none ${
-                msg.sender === 'user'
-                  ? 'bg-aura-terracotta text-white rounded-tr-none'
-                  : 'bg-aura-card border border-aura-border text-aura-sand/90 rounded-tl-none'
-              }`}
-            >
-              <div className="whitespace-pre-wrap">{msg.text}</div>
-
-              {/* Render Structured Day-by-Day Itinerary if present */}
-              {msg.itineraryData && (
-                <div className="pt-2">
-                  <ItineraryView itinerary={msg.itineraryData} />
-                </div>
-              )}
+              <div
+                className={`rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed space-y-3 break-words overflow-hidden ${
+                  msg.sender === 'user'
+                    ? 'bg-aura-terracotta text-white rounded-tr-none max-w-[85%]'
+                    : 'bg-aura-card border border-aura-border text-aura-sand/90 rounded-tl-none w-full max-w-full'
+                }`}
+              >
+                {activeItinerary ? (
+                  <div className="space-y-3 w-full">
+                    <div className="text-xs sm:text-sm font-medium text-aura-sand">
+                      Here is your bespoke {activeItinerary.duration}-day journey for {activeItinerary.destination}:
+                    </div>
+                    <ItineraryView itinerary={activeItinerary} />
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">{msg.text}</div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Loading Indicator */}
         {loading && (
